@@ -3,6 +3,7 @@ muninn-ecmwfmars
 
 This python package facilitates the deployment of a muninn archive of ECMWF,
 providing:
+
 - a muninn namespace extension
 - a muninn remote backend to retrieve data from MARS (requires the
   ecmwf-api-client library and MARS credentials)
