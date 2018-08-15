@@ -293,7 +293,6 @@ def extract_grib_metadata(gribfile):
         - levtype_options struct (see set_remote_url())
     """
     import coda
-    import numpy
 
     @contextlib.contextmanager
     def coda_open(filename):
