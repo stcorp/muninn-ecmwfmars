@@ -1,3 +1,4 @@
+from __future__ import absolute_import, division, print_function
 import contextlib
 import datetime
 import struct
@@ -596,14 +597,14 @@ class ECMWFBackend(RemoteBackend):
                 # Download product.
                 tmp_file_combined = os.path.join(tmp_path, product.core.physical_name)
                 tmp_file_download = os.path.join(tmp_path, "request.grib")
-                combined_file = open(tmp_file_combined, "w")
+                combined_file = open(tmp_file_combined, "wb")
                 for request in requests:
                     if 'dataset' in request:
                         request['target'] = tmp_file_download
                         dataserver.retrieve(request)
                     else:
                         marsservice.execute(request, tmp_file_download)
-                    result_file = open(tmp_file_download, "r")
+                    result_file = open(tmp_file_download, "rb")
                     combined_file.write(result_file.read())
                     result_file.close()
                     os.remove(tmp_file_download)
