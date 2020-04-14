@@ -555,23 +555,10 @@ class ECMWFBackend(RemoteBackend):
     Otherwise the direct MARS access will be used.
     """
 
-    def pull(self, archive, product):
+    def pull(self, archive, product, target_path):
         from ecmwfapi import ECMWFDataServer, ECMWFService
         dataserver = ECMWFDataServer(log=logging.info)
         marsservice = ECMWFService("mars", log=logging.info)
-
-        if getattr(product.core, "archive_path", None) is None:
-            raise Error("cannot pull files that do not have archive_path set")
-
-        # Determine the (absolute) path in the archive that will contain the product and create it if required.
-        abs_archive_path = os.path.realpath(os.path.join(archive._root, product.core.archive_path))
-        abs_product_path = os.path.join(abs_archive_path, product.core.physical_name)
-
-        # Create destination location for product
-        try:
-            util.make_path(abs_archive_path)
-        except EnvironmentError as _error:
-            raise Error("cannot create parent destination path '%s' [%s]" % (abs_archive_path, _error))
 
         requests = []
         for order in product.core.remote_url.split('?')[1].split('&concatenate&'):
@@ -581,44 +568,26 @@ class ECMWFBackend(RemoteBackend):
                 request[key] = value
             requests.append(request)
 
-        plugin = archive.product_type_plugin(product.core.product_type)
-
-        # Create a temporary directory and download the product there, then move the product to its
-        # destination within the archive.
+        file_path = os.path.join(target_path, product.core.physical_name)
         try:
-            with util.TemporaryDirectory(prefix=".pull-", suffix="-%s" % product.core.uuid.hex,
-                                         dir=abs_archive_path) as tmp_path:
-
-                # Create enclosing directory if required.
-                if plugin.use_enclosing_directory:
-                    tmp_path = os.path.join(tmp_path, product.core.physical_name)
-                    util.make_path(tmp_path)
-
-                # Download product.
-                tmp_file_combined = os.path.join(tmp_path, product.core.physical_name)
-                tmp_file_download = os.path.join(tmp_path, "request.grib")
-                combined_file = open(tmp_file_combined, "wb")
-                for request in requests:
-                    if 'dataset' in request:
-                        request['target'] = tmp_file_download
-                        dataserver.retrieve(request)
-                    else:
-                        marsservice.execute(request, tmp_file_download)
-                    result_file = open(tmp_file_download, "rb")
-                    combined_file.write(result_file.read())
-                    result_file.close()
-                    os.remove(tmp_file_download)
-                combined_file.close()
-
-                # Move the retrieved product into its destination within the archive.
-                if plugin.use_enclosing_directory:
-                    os.rename(tmp_path, abs_product_path)
+            # Download product.
+            tmp_file = os.path.join(target_path, "request.grib")
+            combined_file = open(file_path, "wb")
+            for request in requests:
+                if 'dataset' in request:
+                    request['target'] = tmp_file
+                    dataserver.retrieve(request)
                 else:
-                    os.rename(tmp_file_combined, abs_product_path)
-
+                    marsservice.execute(request, tmp_file)
+                result_file = open(tmp_file, "rb")
+                combined_file.write(result_file.read())
+                result_file.close()
+                os.remove(tmp_file)
+            combined_file.close()
         except EnvironmentError as _error:
             raise Error("unable to transfer product to destination path '%s' [%s]" %
                         (abs_product_path, _error))
+        return [file_path]
 
 
 REMOTE_BACKENDS = {
