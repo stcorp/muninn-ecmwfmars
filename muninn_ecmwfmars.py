@@ -585,8 +585,7 @@ class ECMWFBackend(RemoteBackend):
                 os.remove(tmp_file)
             combined_file.close()
         except EnvironmentError as _error:
-            raise Error("unable to transfer product to destination path '%s' [%s]" %
-                        (abs_product_path, _error))
+            raise Error("unable to transfer product to destination path '%s' [%s]" % (file_path, _error))
         return [file_path]
 
 
