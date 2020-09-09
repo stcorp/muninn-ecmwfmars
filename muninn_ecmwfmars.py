@@ -287,6 +287,7 @@ PUBLIC_DATASETS = {
     ("mc", "oper", "rean", "an"): "macc",
 }
 
+
 def extract_grib_metadata(gribfile):
     """
       this will return a tuple containing:
@@ -433,7 +434,8 @@ def extract_grib_metadata(gribfile):
                 if stream != ecmwfmars.stream:
                     raise Error("not all data has the same MARS stream (%s) (%s)" % (stream, ecmwfmars.stream))
                 if expver != ecmwfmars.expver:
-                    raise Error("not all data has the same MARS experiment version (%s) (%s)" % (expver, ecmwfmars.expver))
+                    raise Error("not all data has the same MARS experiment version (%s) (%s)" %
+                                (expver, ecmwfmars.expver))
             else:
                 ecmwfmars.date = date
                 ecmwfmars.time = time
@@ -545,12 +547,12 @@ class ECMWFBackend(RemoteBackend):
     The backend will use the ecmwf-api-client library to retrieve the given product.
     Note that you either need a .ecmwfapirc file with a ECMWF KEY in your home directory or
     you need to set the ECMWF_API_KEY, ECMWF_API_URL, ECMWF_API_EMAIL environment variables.
-    
+
     The interface supports both access to public datasets:
         https://software.ecmwf.int/wiki/display/WEBAPI/Access+ECMWF+Public+Datasets
     as well as direct MARS access:
         https://software.ecmwf.int/wiki/display/WEBAPI/Access+MARS
-    
+
     If the 'query' contains a 'dataset' parameter then the public dataset interface will be used.
     Otherwise the direct MARS access will be used.
     """
@@ -570,20 +572,30 @@ class ECMWFBackend(RemoteBackend):
 
         file_path = os.path.join(target_path, product.core.physical_name)
         try:
-            # Download product.
-            tmp_file = os.path.join(target_path, "request.grib")
-            combined_file = open(file_path, "wb")
-            for request in requests:
-                if 'dataset' in request:
-                    request['target'] = tmp_file
-                    dataserver.retrieve(request)
-                else:
-                    marsservice.execute(request, tmp_file)
-                result_file = open(tmp_file, "rb")
-                combined_file.write(result_file.read())
-                result_file.close()
-                os.remove(tmp_file)
-            combined_file.close()
+            # Download first grib file.
+            request = request[0]
+            if 'dataset' in request:
+                request['target'] = file_path
+                dataserver.retrieve(request)
+            else:
+                marsservice.execute(request, file_path)
+            # Download remaining grib files (if needed) and append to final product.
+            if len(requests) > 1:
+                tmp_file = os.path.join(target_path, "request.grib")
+                with open(file_path, "ab") as combined_file:
+                    for request in requests[1:]:
+                        if 'dataset' in request:
+                            request['target'] = tmp_file
+                            dataserver.retrieve(request)
+                        else:
+                            marsservice.execute(request, tmp_file)
+                        with open(tmp_file, "rb") as result_file:
+                            while True:
+                                block = result_file.read(1048576)  # use 1MB blocks
+                                if not block:
+                                    break
+                                combined_file.write(block)
+                        os.remove(tmp_file)
         except EnvironmentError as _error:
             raise Error("unable to transfer product to destination path '%s' [%s]" % (file_path, _error))
         return [file_path]
@@ -592,6 +604,7 @@ class ECMWFBackend(RemoteBackend):
 REMOTE_BACKENDS = {
     'ecmwfapi': ECMWFBackend(prefix='ecmwfapi:'),
 }
+
 
 def remote_backends():
     return REMOTE_BACKENDS.keys()
