@@ -573,7 +573,7 @@ class ECMWFBackend(RemoteBackend):
         file_path = os.path.join(target_path, product.core.physical_name)
         try:
             # Download first grib file.
-            request = request[0]
+            request = requests[0]
             if 'dataset' in request:
                 request['target'] = file_path
                 dataserver.retrieve(request)
