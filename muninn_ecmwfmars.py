@@ -5,7 +5,7 @@ import struct
 import logging
 import os
 
-from muninn.schema import Mapping, Text, Integer, optional
+from muninn.schema import Mapping, Text, Integer
 from muninn.struct import Struct
 from muninn.exceptions import Error
 from muninn.archive import Archive
@@ -13,19 +13,30 @@ from muninn.remote import RemoteBackend
 from muninn import util
 
 
+# This namespace contains mars request paremeters
 class ECMWFMARSNamespace(Mapping):
-    # These are mars request paremeters
-    dataset = optional(Text)  # Dataset identifier from https://software.ecmwf.int/wiki/display/WEBAPI/Available+ECMWF+Public+Datasets
-    marsclass = Text  # MARS abbreviation from http://apps.ecmwf.int/codes/grib/format/mars/class/
-    stream = Text  # MARS abbreviation from http://apps.ecmwf.int/codes/grib/format/mars/stream/
-    expver = Text  # https://software.ecmwf.int/wiki/display/UDOC/Identification+keywords#Identificationkeywords-expver
-    type = Text  # MARS abbreviation from http://apps.ecmwf.int/codes/grib/format/mars/type/
-    date = Text  # https://software.ecmwf.int/wiki/display/UDOC/Date+and+time+keywords#Dateandtimekeywords-date
-    time = Text  # https://software.ecmwf.int/wiki/display/UDOC/Date+and+time+keywords#Dateandtimekeywords-time
-    step = optional(Integer)  # https://software.ecmwf.int/wiki/display/UDOC/Date+and+time+keywords#Dateandtimekeywords-step
-    resol = optional(Text)  # https://software.ecmwf.int/wiki/display/UDOC/Post-processing+keywords#Post-processingkeywords-resol
-    grid = optional(Text)  # https://software.ecmwf.int/wiki/display/UDOC/Post-processing+keywords#Post-processingkeywords-grid
-    area = optional(Text)  # https://software.ecmwf.int/wiki/display/UDOC/Post-processing+keywords#Post-processingkeywords-area
+    # Dataset identifier from https://software.ecmwf.int/wiki/display/WEBAPI/Available+ECMWF+Public+Datasets
+    dataset = Text(optional=True, index=True)
+    # MARS abbreviation from http://apps.ecmwf.int/codes/grib/format/mars/class/
+    marsclass = Text(index=True)
+    # MARS abbreviation from http://apps.ecmwf.int/codes/grib/format/mars/stream/
+    stream = Text(index=True)
+    # https://software.ecmwf.int/wiki/display/UDOC/Identification+keywords#Identificationkeywords-expver
+    expver = Text(index=True)
+    # MARS abbreviation from http://apps.ecmwf.int/codes/grib/format/mars/type/
+    type = Text(index=True)
+    # https://software.ecmwf.int/wiki/display/UDOC/Date+and+time+keywords#Dateandtimekeywords-date
+    date = Text(index=True)
+    # https://software.ecmwf.int/wiki/display/UDOC/Date+and+time+keywords#Dateandtimekeywords-time
+    time = Text(index=True)
+    # https://software.ecmwf.int/wiki/display/UDOC/Date+and+time+keywords#Dateandtimekeywords-step
+    step = Integer(optional=True, index=True)
+    # https://software.ecmwf.int/wiki/display/UDOC/Post-processing+keywords#Post-processingkeywords-resol
+    resol = Text(optional=True)
+    # https://software.ecmwf.int/wiki/display/UDOC/Post-processing+keywords#Post-processingkeywords-grid
+    grid = Text(optional=True)
+    # https://software.ecmwf.int/wiki/display/UDOC/Post-processing+keywords#Post-processingkeywords-area
+    area = Text(optional=True)
 
 
 NAMESPACES = {
