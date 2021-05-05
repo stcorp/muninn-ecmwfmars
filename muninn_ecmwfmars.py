@@ -15,8 +15,6 @@ from muninn import util
 
 # This namespace contains mars request paremeters
 class ECMWFMARSNamespace(Mapping):
-    # Dataset identifier from https://software.ecmwf.int/wiki/display/WEBAPI/Available+ECMWF+Public+Datasets
-    dataset = Text(optional=True, index=True)
     # MARS abbreviation from http://apps.ecmwf.int/codes/grib/format/mars/class/
     marsclass = Text(index=True)
     # MARS abbreviation from http://apps.ecmwf.int/codes/grib/format/mars/stream/
@@ -289,15 +287,6 @@ MARSTYPES = {
     263: "ofb",
 }
 
-# mapping of (marsclass, stream, expver, type) to dataset
-PUBLIC_DATASETS = {
-    ("ei", "oper", "1", "an"): "interim",
-    ("mc", "gfas", "0001", "ga"): "cams_gfas",
-    ("mc", "oper", "0001", "an"): "cams_nrealtime",
-    ("mc", "oper", "0001", "fc"): "cams_nrealtime",
-    ("mc", "oper", "rean", "an"): "macc",
-}
-
 
 def extract_grib_metadata(gribfile):
     """
@@ -456,8 +445,6 @@ def extract_grib_metadata(gribfile):
                 ecmwfmars.type = marstype
                 ecmwfmars.stream = stream
                 ecmwfmars.expver = expver
-                if (marsclass, stream, expver, marstype) in PUBLIC_DATASETS:
-                    ecmwfmars.dataset = PUBLIC_DATASETS[(marsclass, stream, expver, marstype)]
             coda.cursor_goto_parent(cursor)
             if i < num_messages - 1:
                 coda.cursor_goto_next_array_element(cursor)
@@ -488,8 +475,6 @@ def get_remote_url(filename, ecmwfmars, levtype_options):
         'date': ecmwfmars.date,
         'time': ecmwfmars.time,
     }
-    if 'dataset' in ecmwfmars:
-        request['dataset'] = ecmwfmars.dataset
     if 'step' in ecmwfmars:
         request['step'] = str(ecmwfmars.step)
     if 'resol' in ecmwfmars:
@@ -559,18 +544,12 @@ class ECMWFBackend(RemoteBackend):
     Note that you either need a .ecmwfapirc file with a ECMWF KEY in your home directory or
     you need to set the ECMWF_API_KEY, ECMWF_API_URL, ECMWF_API_EMAIL environment variables.
 
-    The interface supports both access to public datasets:
-        https://software.ecmwf.int/wiki/display/WEBAPI/Access+ECMWF+Public+Datasets
-    as well as direct MARS access:
+    The interface supports MARS access as described at:
         https://software.ecmwf.int/wiki/display/WEBAPI/Access+MARS
-
-    If the 'query' contains a 'dataset' parameter then the public dataset interface will be used.
-    Otherwise the direct MARS access will be used.
     """
 
     def pull(self, archive, product, target_path):
-        from ecmwfapi import ECMWFDataServer, ECMWFService
-        dataserver = ECMWFDataServer(log=logging.info)
+        from ecmwfapi import ECMWFService
         marsservice = ECMWFService("mars", log=logging.info)
 
         requests = []
@@ -585,21 +564,13 @@ class ECMWFBackend(RemoteBackend):
         try:
             # Download first grib file.
             request = requests[0]
-            if 'dataset' in request:
-                request['target'] = file_path
-                dataserver.retrieve(request)
-            else:
-                marsservice.execute(request, file_path)
+            marsservice.execute(request, file_path)
             # Download remaining grib files (if needed) and append to final product.
             if len(requests) > 1:
                 tmp_file = os.path.join(target_path, "request.grib")
                 with open(file_path, "ab") as combined_file:
                     for request in requests[1:]:
-                        if 'dataset' in request:
-                            request['target'] = tmp_file
-                            dataserver.retrieve(request)
-                        else:
-                            marsservice.execute(request, tmp_file)
+                        marsservice.execute(request, tmp_file)
                         with open(tmp_file, "rb") as result_file:
                             while True:
                                 block = result_file.read(1048576)  # use 1MB blocks
