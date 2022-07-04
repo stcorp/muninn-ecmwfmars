@@ -1,0 +1,17 @@
+1.1 2022-07-04
+~~~~~~~~~~~~~~~
+
+* Removed 'dataset' namespace property and support for public dataset interface.
+  (only direct mars interface is supported now, since public dataset interface
+  will get replaced by ADS and CDS interfaces).
+
+* Improved memory and I/O performance of pull().
+
+* Updated to new muninn 5.0 api interface.
+
+* Several small fixes and python3 compatibility fixes.
+
+1.0 2018-08-22
+~~~~~~~~~~~~~~
+
+* First release.
