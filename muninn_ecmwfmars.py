@@ -452,7 +452,7 @@ def extract_grib_metadata(gribfile):
     return ecmwfmars, levtype_options
 
 
-def get_remote_url(filename, ecmwfmars, levtype_options):
+def get_remote_url(filename, ecmwfmars, levtype_options, packing=None):
     """
         levtype_options should be a dict with for each 'levtype' field a dict containing:
         - string 'param'
@@ -483,6 +483,8 @@ def get_remote_url(filename, ecmwfmars, levtype_options):
         request['grid'] = ecmwfmars.grid
     if 'area' in ecmwfmars:
         request['area'] = ecmwfmars.area
+    if packing is not None:
+        request['packing'] = packing
 
     first = True
     for levtype in levtype_options:
@@ -502,7 +504,7 @@ def get_remote_url(filename, ecmwfmars, levtype_options):
     return remote_url
 
 
-def get_core_properties(product_type, ecmwfmars, levtype_options=None):
+def get_core_properties(product_type, ecmwfmars, levtype_options=None, packing=None):
     date = datetime.datetime.strptime(ecmwfmars.date.replace('-', ''), "%Y%m%d")
     time = ecmwfmars.time.replace(':', '')
     if len(time) >= 2:
@@ -526,7 +528,7 @@ def get_core_properties(product_type, ecmwfmars, levtype_options=None):
     # the creation date is set to the base time of the model
     core.creation_date = date
     if levtype_options:
-        core.remote_url = get_remote_url(core.physical_name, ecmwfmars, levtype_options)
+        core.remote_url = get_remote_url(core.physical_name, ecmwfmars, levtype_options, packing)
     return core
 
 
