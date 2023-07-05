@@ -1,5 +1,11 @@
+1.2 2023-07-05
+~~~~~~~~~~~~~~
+
+* Added support for 'packing' argument. Use packing='simple' to disable CCSDS
+  packing that was introduced with ifs 48r1.
+
 1.1 2021-11-03
-~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~
 
 * Removed 'dataset' namespace property and support for public dataset interface.
   (only direct mars interface is supported now, since public dataset interface
