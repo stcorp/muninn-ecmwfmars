@@ -10,7 +10,6 @@ from muninn.struct import Struct
 from muninn.exceptions import Error
 from muninn.archive import Archive
 from muninn.remote import RemoteBackend
-from muninn import util
 
 
 # This namespace contains mars request paremeters
@@ -401,7 +400,6 @@ def extract_grib_metadata(gribfile):
                 minute = coda.fetch(cursor, "minute")
                 second = coda.fetch(cursor, "second")
                 time = "%02d:%02d:%02d" % (hour, minute, second)
-                significanceOfReferenceTime = coda.fetch(cursor, "significanceOfReferenceTime")
                 local = coda.fetch(cursor, "local[0]")
                 try:
                     local = local[2:12].tobytes()
