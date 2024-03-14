@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name="muninn-ecmwfmars",
-    version="1.2",
+    version="1.3",
     description="Muninn extension for ECMWF GRIB products from the mars archive",
     url="https://github.com/stcorp/muninn-ecmwfmars",
     author="S[&]T",
